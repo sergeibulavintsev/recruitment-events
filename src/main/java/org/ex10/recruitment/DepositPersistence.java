@@ -1,5 +1,16 @@
 package org.ex10.recruitment;
 
+import java.util.Optional;
+
 public interface DepositPersistence {
-    // add methods as needed
+
+    void beginTransaction();
+
+    void commitTransaction();
+
+    void rollbackTransaction();
+
+    Optional<DepositModel> find(String id);
+
+    DepositModel persist(DepositModel model);
 }

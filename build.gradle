@@ -12,6 +12,7 @@ repositories {
 
 dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    testImplementation 'org.mockito:mockito-core:5.4.0'
 }
 
 test {
@@ -28,4 +29,8 @@ compileTestKotlin {
 
 application {
     mainClassName = 'MainKt'
+}
+
+compileJava {
+    options.compilerArgs += ['--enable-preview']
 }

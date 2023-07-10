@@ -6,7 +6,7 @@ public class ExternalSystem {
     /*
      NOT IDEMPOTENT!!
      */
-    void submitDeposit(Deposit deposit) {
+    public void submitDeposit(Deposit deposit) {
 
     }
 
