@@ -85,6 +85,20 @@ class DepositMessageHandlerTest {
     }
 
     @Test
+    void should_throw_exception_when_event_is_null() {
+        // given
+        var event = new Message<Deposit>(null, 10);
+
+        // when
+        var exception = assertThrows(NullPointerException.class, () -> handler.handleMessage(event));
+
+        // then
+        assertEquals("event is required", exception.getMessage());
+        verifyNoInteractions(externalSystem);
+        verifyNoInteractions(depositPersistence);
+    }
+
+    @Test
     void should_successfully_submit_previously_failed_deposit() {
         // given
         var deposit = new Deposit(randomUUID().toString(), "account", 1000);
