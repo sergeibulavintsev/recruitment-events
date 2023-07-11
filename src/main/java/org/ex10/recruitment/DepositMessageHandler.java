@@ -8,8 +8,9 @@ import org.ex10.recruitment.base.MessageHandler;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
-import static org.ex10.recruitment.DepositModel.createdDeposit;
+import static org.ex10.recruitment.DepositModel.deposit;
 import static org.ex10.recruitment.DepositState.CREATED;
 import static org.ex10.recruitment.DepositState.SUBMITTED;
 
@@ -27,7 +28,7 @@ public class DepositMessageHandler extends MessageHandler<Deposit> {
 
     @Override
     public void handleMessage(Message<Deposit> message) {
-        final var event = message.event();
+        final var event = requireNonNull(message.event(), "event is required");
 
         final var depositToSubmit = depositForSubmission(event);
         depositToSubmit.ifPresent(it -> submitDeposit(it, event));
@@ -51,7 +52,7 @@ public class DepositMessageHandler extends MessageHandler<Deposit> {
     }
 
     private DepositModel createDeposit(Deposit event) {
-        return depositPersistence.persist(createdDeposit(event.id(), event.amount(), event.account()));
+        return depositPersistence.persist(deposit(event.id(), CREATED, event.amount(), event.account()));
     }
 
     private void submitDeposit(DepositModel depositModel, Deposit deposit) {

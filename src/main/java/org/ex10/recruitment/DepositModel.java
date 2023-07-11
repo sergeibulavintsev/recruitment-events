@@ -1,11 +1,20 @@
 package org.ex10.recruitment;
 
+import static java.util.Objects.requireNonNull;
 import static org.ex10.recruitment.DepositState.*;
+import static org.ex10.recruitment.checks.Checks.checkNotEmpty;
+import static org.ex10.recruitment.checks.Checks.checkThat;
 
 public record DepositModel(String id, DepositState state, long amount, String account) {
 
-    public static DepositModel createdDeposit(String id, long amount, String account) {
-        return new DepositModel(id, CREATED, amount, account);
+    public DepositModel {
+        checkNotEmpty(id, "id is required and must be not empty");
+        checkThat(amount > 0, "Amount must be greater than zero");
+        checkNotEmpty(account, "account is required and must be not empty");
+    }
+
+    public static DepositModel deposit(String id, DepositState state, long amount, String account) {
+        return new DepositModel(id, state, amount, account);
     }
 
     public boolean is(DepositState state) {
@@ -13,13 +22,13 @@ public record DepositModel(String id, DepositState state, long amount, String ac
     }
 
     public DepositModel submit() {
-        return new DepositModel(id, SUBMITTED, amount, account);
+        return deposit(id, SUBMITTED, amount, account);
     }
 
     public DepositModel fail() {
         if (is(FAILED)) {
             return this;
         }
-        return new DepositModel(id, FAILED, amount, account);
+        return deposit(id, FAILED, amount, account);
     }
 }

@@ -3,6 +3,7 @@ package ex10.org.recruitment;
 import org.ex10.recruitment.DepositMessageHandler;
 import org.ex10.recruitment.DepositModel;
 import org.ex10.recruitment.DepositPersistence;
+import org.ex10.recruitment.DepositState;
 import org.ex10.recruitment.base.Deposit;
 import org.ex10.recruitment.base.ExternalSystem;
 import org.ex10.recruitment.base.Message;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.UUID.randomUUID;
+import static org.ex10.recruitment.DepositModel.deposit;
 import static org.ex10.recruitment.DepositState.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -28,8 +30,8 @@ class DepositMessageHandlerTest {
     void should_successfully_submit_deposit() {
         // given
         var deposit = new Deposit(randomUUID().toString(), "account", 1000);
-        var createdDeposit = new DepositModel(deposit.id(), CREATED, deposit.amount(), deposit.account());
-        var submittedDeposit = new DepositModel(deposit.id(), SUBMITTED, deposit.amount(), deposit.account());
+        var createdDeposit = depositInState(deposit, CREATED);
+        var submittedDeposit = depositInState(deposit, SUBMITTED);
         var event = new Message<>(deposit, 10);
 
         given(depositPersistence.persist(createdDeposit)).willReturn(createdDeposit);
@@ -48,7 +50,7 @@ class DepositMessageHandlerTest {
     void should_do_nothing_when_deposit_is_already_submitted() {
         // given
         var deposit = new Deposit(randomUUID().toString(), "account", 1000);
-        var submittedDeposit = new DepositModel(deposit.id(), SUBMITTED, deposit.amount(), deposit.account());
+        var submittedDeposit = depositInState(deposit, SUBMITTED);
         var event = new Message<>(deposit, 10);
 
         given(depositPersistence.find(deposit.id())).willReturn(of(submittedDeposit));
@@ -66,7 +68,7 @@ class DepositMessageHandlerTest {
     void should_throw_exception_when_existing_deposit_in_created_state() {
         // given
         var deposit = new Deposit(randomUUID().toString(), "account", 1000);
-        var existingCreatedDeposit = new DepositModel(deposit.id(), CREATED, deposit.amount(), deposit.account());
+        var existingCreatedDeposit = depositInState(deposit, CREATED);
         var event = new Message<>(deposit, 10);
 
         given(depositPersistence.find(deposit.id())).willReturn(of(existingCreatedDeposit));
@@ -86,8 +88,8 @@ class DepositMessageHandlerTest {
     void should_successfully_submit_previously_failed_deposit() {
         // given
         var deposit = new Deposit(randomUUID().toString(), "account", 1000);
-        var existingFailedDeposit = new DepositModel(deposit.id(), FAILED, deposit.amount(), deposit.account());
-        var submittedDeposit = new DepositModel(deposit.id(), SUBMITTED, deposit.amount(), deposit.account());
+        var existingFailedDeposit = depositInState(deposit, FAILED);
+        var submittedDeposit = depositInState(deposit, SUBMITTED);
         var event = new Message<>(deposit, 10);
 
         given(depositPersistence.find(deposit.id())).willReturn(of(existingFailedDeposit));
@@ -105,8 +107,8 @@ class DepositMessageHandlerTest {
     void should_fail_deposit_when_exception_thrown_by_external_system() {
         // given
         var deposit = new Deposit(randomUUID().toString(), "account", 1000);
-        var createdDeposit = new DepositModel(deposit.id(), CREATED, deposit.amount(), deposit.account());
-        var failedDeposit = new DepositModel(deposit.id(), FAILED, deposit.amount(), deposit.account());
+        var createdDeposit = depositInState(deposit, CREATED);
+        var failedDeposit = depositInState(deposit, FAILED);
         var event = new Message<>(deposit, 10);
         var externalSystemException = new RuntimeException("External system error");
 
@@ -121,5 +123,9 @@ class DepositMessageHandlerTest {
         assertEquals(externalSystemException, exception);
         verify(depositPersistence).persist(createdDeposit);
         verify(depositPersistence).persist(failedDeposit);
+    }
+
+    private static DepositModel depositInState(Deposit deposit, DepositState state) {
+        return deposit(deposit.id(), state, deposit.amount(), deposit.account());
     }
 }
